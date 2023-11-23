@@ -3,13 +3,21 @@ import Product from "@/models/Product";
 
 export default async function handler(req, res) {
   const { method } = req;
-  console.log(req.body);
+
   await mongooseConnect();
 
   if (method === "POST") {
-    const { title, description, price, images } = req.body;
-    console.log(images);
-    const productDoc = new Product({ title, description, images, price });
+    const { title, description, price, images, category } = req.body;
+    let data = {
+      title,
+      description,
+      images,
+      price
+    };
+    if (category !== "") {
+      data.category = category;
+    }
+    const productDoc = new Product(data);
     await productDoc.save();
 
     res
@@ -32,7 +40,7 @@ export default async function handler(req, res) {
   }
 
   if (method === "PUT") {
-    const { title, description, price, images, _id } = req.body;
+    const { title, description, price, images, _id, category } = req.body;
 
     // await Product.updateOne(
     //   { _id },
@@ -44,6 +52,10 @@ export default async function handler(req, res) {
     editedProduct.description = description;
     editedProduct.price = price;
     editedProduct.images = images;
+    if (category !== "") {
+      editedProduct.category = category;
+    }
+
     await editedProduct.save();
 
     res
