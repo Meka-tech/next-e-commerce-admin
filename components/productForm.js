@@ -10,17 +10,20 @@ export default function ProductForm({
   description: existingDescription,
   price: existingPrice,
   images: existingImages,
-  category: existingCategory
+  category: existingCategory,
+  properties: existingProperties
 }) {
   const [title, setTitle] = useState(existingTitle || "");
   const [description, setDescription] = useState(existingDescription || "");
   const [price, setPrice] = useState(existingPrice || "");
-
   const [images, setImages] = useState(existingImages || []);
   const [goToProducts, setGoToProducts] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [category, setCategory] = useState(existingCategory || "");
+  const [productProperties, setProductProperties] = useState(
+    existingProperties || {}
+  );
   const router = useRouter();
 
   async function getCategories() {
@@ -29,7 +32,14 @@ export default function ProductForm({
   }
   async function saveProduct(e) {
     e.preventDefault();
-    const data = { title, description, price, images, category };
+    const data = {
+      title,
+      description,
+      price,
+      images,
+      category,
+      properties: productProperties
+    };
     if (_id) {
       await axios.put("/api/products", { ...data, _id });
       setGoToProducts(true);
@@ -63,6 +73,28 @@ export default function ProductForm({
     setImages(images);
   }
 
+  const propertiestoFill = [];
+
+  if (categories.length > 0 && category) {
+    let selectedCatInfo = categories.find((cat) => cat._id === category);
+    propertiestoFill.push(...selectedCatInfo.properties);
+    while (selectedCatInfo?.parent?._id) {
+      const parentCategory = categories.find(
+        (cat) => cat._id === selectedCatInfo?.parent?._id
+      );
+      propertiestoFill.push(...parentCategory.properties);
+      selectedCatInfo = parentCategory;
+    }
+  }
+
+  function setProductProp(propName, value) {
+    setProductProperties((prev) => {
+      const newProductProps = { ...prev };
+      newProductProps[propName] = value;
+      return newProductProps;
+    });
+  }
+
   useEffect(() => {
     getCategories();
   }, []);
@@ -88,6 +120,28 @@ export default function ProductForm({
             );
           })}
       </select>
+      {propertiestoFill.length > 0 &&
+        propertiestoFill.map((p, i) => {
+          return (
+            <div key={i}>
+              <label>{p.name[0].toUpperCase() + p.name.substring(1)}</label>
+              <div>
+                {" "}
+                <select
+                  value={productProperties[p.name]}
+                  onChange={(e) => setProductProp(p.name, e.target.value)}
+                >
+                  <option value={""}>Select</option>
+                  {p.values.map((v, i) => (
+                    <option value={v} key={i}>
+                      {v}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          );
+        })}
       <label>Photos </label>
       <div className="mb-2 flex flex-wrap gap-1">
         <ReactSortable
@@ -98,7 +152,10 @@ export default function ProductForm({
           {!!images?.length &&
             images.map((image, i) => {
               return (
-                <div key={i} className="h-24">
+                <div
+                  key={i}
+                  className="h-24 bg-white p-4 shadow-sm rounded-sm border border-gray-200"
+                >
                   <img src={image?.link} alt="" className="rounded-lg" />
                 </div>
               );
@@ -109,7 +166,7 @@ export default function ProductForm({
             <Spinner />
           </div>
         )}
-        <label className=" w-24 h-24 cursor-pointer text-center flex items-center justify-center text-sm gap-1 text-gray-500 rounded-lg bg-gray-200">
+        <label className=" w-24 h-24 cursor-pointer text-center  flex flex-col items-center justify-center text-sm gap-1 text-primary rounded-sm bg-white shadow-sm border border-primary">
           {" "}
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -125,7 +182,7 @@ export default function ProductForm({
               d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
             />
           </svg>
-          <div>Upload</div>
+          <div>Add image</div>
           <input type="file" onChange={uploadImages} className="hidden" />
         </label>
         {!images?.length && <div>No photos in this product</div>}

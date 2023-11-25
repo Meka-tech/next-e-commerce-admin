@@ -1,8 +1,13 @@
+import { mongooseConnect } from "@/lib/mongoose";
 import { v2 as cloudinary } from "cloudinary";
 
 import multiparty from "multiparty";
+import { isAdminRequest } from "./auth/[...nextauth]";
 
 export default async function handler(req, res) {
+  await mongooseConnect();
+  await isAdminRequest(req, res);
+
   cloudinary.config({
     cloud_name: process.env.CLOUD_NAME,
     api_key: process.env.CLOUD_API_KEY,

@@ -1,4 +1,4 @@
-import mongoose, { model, Schema, models } from "mongoose";
+import { model, Schema, models } from "mongoose";
 
 const imageSchema = new Schema({
   name: {
@@ -18,7 +18,8 @@ const ProductSchema = new Schema({
     required: true
   },
   price: { type: Number, required: true },
-  category: { type: mongoose.Types.ObjectId, ref: "category" }
+  category: { type: Schema.Types.ObjectId, ref: "category" },
+  properties: { type: Object }
 });
 
 const Product = models.product || model("product", ProductSchema);

@@ -1,18 +1,22 @@
 import { mongooseConnect } from "@/lib/mongoose";
 import Product from "@/models/Product";
+import { isAdminRequest } from "./auth/[...nextauth]";
 
 export default async function handler(req, res) {
   const { method } = req;
 
   await mongooseConnect();
+  await isAdminRequest(req, res);
 
   if (method === "POST") {
-    const { title, description, price, images, category } = req.body;
+    const { title, description, price, images, category, properties } =
+      req.body;
     let data = {
       title,
       description,
       images,
-      price
+      price,
+      properties
     };
     if (category !== "") {
       data.category = category;
@@ -40,18 +44,15 @@ export default async function handler(req, res) {
   }
 
   if (method === "PUT") {
-    const { title, description, price, images, _id, category } = req.body;
-
-    // await Product.updateOne(
-    //   { _id },
-    //   { title: title, description: description, price: price }
-    // );
+    const { title, description, price, images, _id, category, properties } =
+      req.body;
 
     const editedProduct = await Product.findOne({ _id: _id });
     editedProduct.title = title;
     editedProduct.description = description;
     editedProduct.price = price;
     editedProduct.images = images;
+    editedProduct.properties = properties;
     if (category !== "") {
       editedProduct.category = category;
     }

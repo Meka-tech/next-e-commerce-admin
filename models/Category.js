@@ -1,8 +1,9 @@
-import mongoose, { model, Schema, models } from "mongoose";
+import { model, Schema, models } from "mongoose";
 
 const CategorySchema = new Schema({
   name: { type: String, required: true },
-  parent: { type: mongoose.Types.ObjectId, ref: "category" }
+  parent: { type: Schema.Types.ObjectId, ref: "category" },
+  properties: [{ type: Object }]
 });
 
 const Category = models.category || model("category", CategorySchema);
